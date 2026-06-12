@@ -484,6 +484,8 @@ _buildInstance() {
 
   echo >&2 "Building config..."
 
+  # In nix versions > 2.34.x, the output of nix derivation show seems to have changed, and the derivation path is no longer directly available as a top level key.
+  # This aims to be compatible with both the old and new output formats, as long as the interface doesn't break again. 
   # shellcheck disable=SC2086
   drv_path=$(nix derivation show $NF_NIX_BUILD_OPTS \
     "$NF_FLAKE#nixosConfigurations.$name.config.system.build.toplevel" \
