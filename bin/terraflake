@@ -477,6 +477,7 @@ export -f _initInstance
 _buildInstance() {
   local ecode=0
   local name="$1"
+  local drv_path
 
   # Make sure config is instantiated
   _confPath "$name" >/dev/null
@@ -484,9 +485,15 @@ _buildInstance() {
   echo >&2 "Building config..."
 
   # shellcheck disable=SC2086
-  nix derivation show $NF_NIX_BUILD_OPTS \
+  drv_path=$(nix derivation show $NF_NIX_BUILD_OPTS \
     "$NF_FLAKE#nixosConfigurations.$name.config.system.build.toplevel" \
-    | jq -r 'keys|.[0]'
+    | jq -r 'if has("derivations") then .derivations | keys[0] | "/nix/store/" + . else keys[0] end')
+
+  if [[ "$drv_path" != /nix/store/* ]]; then
+    echo >&2 "Warning: Could not determine a valid store path from derivation output: $drv_path"
+  fi
+
+  echo "$drv_path"
 }
 export -f _buildInstance
 
